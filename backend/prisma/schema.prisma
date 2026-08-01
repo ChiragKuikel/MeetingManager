@@ -19,13 +19,6 @@ enum VideoStatus {
   failed
 }
 
-enum QueueStatus {
-  queued
-  processing
-  completed
-  failed
-}
-
 model Organization {
   id        Int      @id @default(autoincrement())
   name      String   @db.VarChar(255)
@@ -65,13 +58,14 @@ model Video {
   duration       Int?
   mimeType       String?     @map("mime_type") @db.VarChar(100)
   status         VideoStatus @default(uploading)
+  attempts       Int         @default(0)
+  errorMessage   String?     @map("error_message")
   createdAt      DateTime    @default(now()) @map("created_at")
   updatedAt      DateTime    @updatedAt @map("updated_at")
 
-  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   summary      Summary?
-  queueEntry   ProcessingQueue?
 
   @@index([userId, status])
   @@index([organizationId])
@@ -92,23 +86,4 @@ model Summary {
   video Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
 
   @@map("summaries")
-}
-
-// Retained as a faithful port of the MySQL table; slated to be dropped in Phase 3
-// once BullMQ replaces the polling queue (see migration-plan.md).
-model ProcessingQueue {
-  id           Int         @id @default(autoincrement())
-  videoId      Int         @unique @map("video_id")
-  priority     Int         @default(0)
-  status       QueueStatus @default(queued)
-  attempts     Int         @default(0)
-  errorMessage String?     @map("error_message")
-  startedAt    DateTime?   @map("started_at")
-  completedAt  DateTime?   @map("completed_at")
-  createdAt    DateTime    @default(now()) @map("created_at")
-
-  video Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
-
-  @@index([status, priority])
-  @@map("processing_queue")
 }
