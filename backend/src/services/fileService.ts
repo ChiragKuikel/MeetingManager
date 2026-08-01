@@ -37,6 +37,10 @@ export class FileService {
         }
     }
 
+    public getUploadDir(): string {
+        return this.uploadDir;
+    }
+
     public generateFilename(originalname: string): string {
         const uniqueSuffix = crypto.randomBytes(16).toString('hex');
         const ext = path.extname(originalname);
