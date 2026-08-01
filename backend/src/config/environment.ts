@@ -14,6 +14,8 @@ interface Environment {
     UPLOAD_DIR: string;
     MAX_FILE_SIZE: number;
     ALLOWED_MIME_TYPES: string[];
+    REDIS_HOST: string;
+    REDIS_PORT: number;
     JWT_SECRET: string;
     API_KEY: string;
     GROQ_API_KEY: string;
@@ -32,6 +34,8 @@ export const env: Environment = {
     UPLOAD_DIR: process.env.UPLOAD_DIR || 'uploads',
     MAX_FILE_SIZE: parseInt(process.env.MAX_FILE_SIZE || '524288000', 10), // 500MB
     ALLOWED_MIME_TYPES: (process.env.ALLOWED_MIME_TYPES || 'video/mp4,video/quicktime,video/x-msvideo,video/webm').split(','),
+    REDIS_HOST: process.env.REDIS_HOST || 'localhost',
+    REDIS_PORT: parseInt(process.env.REDIS_PORT || '6380', 10),
     JWT_SECRET: process.env.JWT_SECRET || 'your-secret-key',
     API_KEY: process.env.API_KEY || 'demo-key',
     GROQ_API_KEY: process.env.GROQ_API_KEY || '',

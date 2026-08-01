@@ -1,14 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
+import { VIDEO_PROCESSING_QUEUE, VideoProcessingJob } from '../queue/queue.module';
 
 @Injectable()
 export class ProcessingService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(@InjectQueue(VIDEO_PROCESSING_QUEUE) private readonly queue: Queue<VideoProcessingJob>) {}
 
-  /** Queue a video for processing. Mirrors old QueueModel.add. Real BullMQ enqueue = Phase 3. */
-  async enqueue(videoId: number, priority: number = 0) {
-    return this.prisma.processingQueue.create({
-      data: { videoId, priority },
-    });
+  async enqueue(videoId: number) {
+    return this.queue.add('process-video', { videoId });
   }
 }
