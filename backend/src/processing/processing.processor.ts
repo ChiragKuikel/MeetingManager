@@ -31,24 +31,54 @@ export class ProcessingProcessor extends WorkerHost {
       const transcript = await groqService.transcribeAudioFile(audioPath);
       const structured = await groqService.summarizeTranscriptToStructured(transcript);
 
-      await this.prisma.summary.upsert({
-        where: { videoId },
-        create: {
-          videoId,
-          summaryText: structured.summary_text,
-          keyPoints: structured.key_points as any,
-          actionItems: structured.action_items as any,
-          speakers: structured.speakers as any,
-          transcript,
-        },
-        update: {
-          summaryText: structured.summary_text,
-          keyPoints: structured.key_points as any,
-          actionItems: structured.action_items as any,
-          speakers: structured.speakers as any,
-          transcript,
-        },
-      });
+      const ownerMap = await this.buildOwnerMap(video.organizationId);
+
+      await this.prisma.$transaction([
+        this.prisma.summary.upsert({
+          where: { videoId },
+          create: {
+            videoId,
+            summaryText: structured.summary_text,
+            keyPoints: structured.key_points as any,
+            speakers: structured.speakers as any,
+            transcript,
+          },
+          update: {
+            summaryText: structured.summary_text,
+            keyPoints: structured.key_points as any,
+            speakers: structured.speakers as any,
+            transcript,
+          },
+        }),
+        this.prisma.decision.deleteMany({ where: { videoId } }),
+        this.prisma.decision.createMany({
+          data: structured.decisions.map((description) => ({
+            organizationId: video.organizationId,
+            videoId,
+            description,
+          })),
+        }),
+        this.prisma.openQuestion.deleteMany({ where: { videoId } }),
+        this.prisma.openQuestion.createMany({
+          data: structured.open_questions.map((question) => ({
+            organizationId: video.organizationId,
+            videoId,
+            question,
+          })),
+        }),
+        this.prisma.actionItem.deleteMany({ where: { videoId } }),
+        this.prisma.actionItem.createMany({
+          data: structured.action_items.map((item) => ({
+            organizationId: video.organizationId,
+            videoId,
+            task: item.task,
+            assignee: item.assignee,
+            ownerId: ownerMap.get(item.assignee.toLowerCase()) ?? null,
+            dueDate: this.parseDueDate(item.due),
+            priority: item.priority,
+          })),
+        }),
+      ]);
 
       await this.prisma.video.update({
         where: { id: videoId },
@@ -66,5 +96,23 @@ export class ProcessingProcessor extends WorkerHost {
     } finally {
       if (audioPath) await audioExtractionService.safeUnlink(audioPath);
     }
+  }
+
+  private async buildOwnerMap(organizationId: number): Promise<Map<string, number>> {
+    const users = await this.prisma.user.findMany({
+      where: { organizationId },
+      select: { id: true, name: true },
+    });
+    const map = new Map<string, number>();
+    for (const user of users) {
+      if (user.name) map.set(user.name.toLowerCase(), user.id);
+    }
+    return map;
+  }
+
+  private parseDueDate(due: string): Date | null {
+    if (!due || due.toUpperCase() === 'TBD') return null;
+    const parsed = new Date(due);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
   }
 }
