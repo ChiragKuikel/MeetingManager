@@ -19,14 +19,22 @@ enum VideoStatus {
   failed
 }
 
+enum ActionItemStatus {
+  open
+  done
+}
+
 model Organization {
   id        Int      @id @default(autoincrement())
   name      String   @db.VarChar(255)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  users  User[]
-  videos Video[]
+  users         User[]
+  videos        Video[]
+  decisions     Decision[]
+  openQuestions OpenQuestion[]
+  actionItems   ActionItem[]
 
   @@map("organizations")
 }
@@ -40,8 +48,9 @@ model User {
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  videos       Video[]
+  organization        Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  videos               Video[]
+  assignedActionItems   ActionItem[]
 
   @@index([organizationId])
   @@map("users")
@@ -63,9 +72,12 @@ model Video {
   createdAt      DateTime    @default(now()) @map("created_at")
   updatedAt      DateTime    @updatedAt @map("updated_at")
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  summary      Summary?
+  organization  Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  summary       Summary?
+  decisions     Decision[]
+  openQuestions OpenQuestion[]
+  actionItems   ActionItem[]
 
   @@index([userId, status])
   @@index([organizationId])
@@ -77,7 +89,6 @@ model Summary {
   videoId     Int      @unique @map("video_id")
   summaryText String?  @map("summary_text")
   keyPoints   Json?    @map("key_points")
-  actionItems Json?    @map("action_items")
   speakers    Json?
   transcript  String?
   createdAt   DateTime @default(now()) @map("created_at")
@@ -86,4 +97,57 @@ model Summary {
   video Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
 
   @@map("summaries")
+}
+
+model Decision {
+  id             Int      @id @default(autoincrement())
+  organizationId Int      @map("organization_id")
+  videoId        Int      @map("video_id")
+  description    String
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  video        Video        @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@index([videoId])
+  @@index([organizationId])
+  @@map("decisions")
+}
+
+model OpenQuestion {
+  id             Int      @id @default(autoincrement())
+  organizationId Int      @map("organization_id")
+  videoId        Int      @map("video_id")
+  question       String
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  video        Video        @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@index([videoId])
+  @@index([organizationId])
+  @@map("open_questions")
+}
+
+model ActionItem {
+  id             Int              @id @default(autoincrement())
+  organizationId Int              @map("organization_id")
+  videoId        Int              @map("video_id")
+  task           String
+  assignee       String?
+  ownerId        Int?             @map("owner_id")
+  dueDate        DateTime?        @map("due_date")
+  priority       String?
+  status         ActionItemStatus @default(open)
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  video        Video        @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  owner        User?        @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+
+  @@index([videoId])
+  @@index([organizationId])
+  @@index([ownerId])
+  @@map("action_items")
 }
