@@ -2,11 +2,13 @@ import { Controller, Get } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import fileService from '../services/fileService';
 import { env } from '../config/environment';
+import { Public } from '../auth/public.decorator';
 
 @Controller('health')
 export class HealthController {
   constructor(private readonly prisma: PrismaService) {}
 
+  @Public()
   @Get()
   async check() {
     let dbConnected = true;
