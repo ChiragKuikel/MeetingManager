@@ -10,13 +10,18 @@ import { ProcessingModule } from './processing/processing.module';
 import { HealthModule } from './health/health.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
+import { bullBoardAuthMiddleware } from './auth/bull-board-auth.middleware';
 import { QueueModule, VIDEO_PROCESSING_QUEUE } from './queue/queue.module';
 
 @Module({
   imports: [
     PrismaModule,
     QueueModule,
-    BullBoardModule.forRoot({ route: '/admin/queues', adapter: ExpressAdapter }),
+    BullBoardModule.forRoot({
+      route: '/admin/queues',
+      adapter: ExpressAdapter,
+      middleware: bullBoardAuthMiddleware,
+    }),
     BullBoardModule.forFeature({ name: VIDEO_PROCESSING_QUEUE, adapter: BullMQAdapter }),
     AuthModule,
     VideosModule,

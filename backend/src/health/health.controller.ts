@@ -1,6 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import fileService from '../services/fileService';
 import { env } from '../config/environment';
 import { Public } from '../auth/public.decorator';
 
@@ -23,7 +22,6 @@ export class HealthController {
       timestamp: new Date().toISOString(),
       environment: env.NODE_ENV,
       database: dbConnected ? 'connected' : 'disconnected',
-      uploadDir: fileService.getUploadDir(),
     };
   }
 }

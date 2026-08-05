@@ -22,6 +22,7 @@ interface Environment {
     REDIS_PORT: number;
     JWT_SECRET: string;
     AUTH_DISABLED: boolean;
+    CORS_ORIGINS: string[];
     API_KEY: string;
     GROQ_API_KEY: string;
     GROQ_TRANSCRIBE_MODEL: string;
@@ -43,6 +44,7 @@ export const env: Environment = {
     REDIS_PORT: parseInt(process.env.REDIS_PORT || '6380', 10),
     JWT_SECRET: process.env.JWT_SECRET,
     AUTH_DISABLED: process.env.AUTH_DISABLED === 'true',
+    CORS_ORIGINS: (process.env.CORS_ORIGINS || 'http://localhost:3000,http://localhost:3001').split(','),
     API_KEY: process.env.API_KEY || 'demo-key',
     GROQ_API_KEY: process.env.GROQ_API_KEY || '',
     GROQ_TRANSCRIBE_MODEL: process.env.GROQ_TRANSCRIBE_MODEL || 'whisper-large-v3-turbo',
