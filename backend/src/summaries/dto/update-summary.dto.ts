@@ -8,8 +8,4 @@ export class UpdateSummaryDto {
   @IsOptional()
   @IsArray()
   keyPoints?: unknown[];
-
-  @IsOptional()
-  @IsArray()
-  actionItems?: unknown[];
 }

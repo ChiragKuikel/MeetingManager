@@ -9,7 +9,14 @@ export class SummariesService {
   async findByVideoId(videoId: number) {
     const summary = await this.prisma.summary.findUnique({ where: { videoId } });
     if (!summary) throw new NotFoundException('Summary not found');
-    return summary;
+
+    const [decisions, openQuestions, actionItems] = await Promise.all([
+      this.prisma.decision.findMany({ where: { videoId }, orderBy: { id: 'asc' } }),
+      this.prisma.openQuestion.findMany({ where: { videoId }, orderBy: { id: 'asc' } }),
+      this.prisma.actionItem.findMany({ where: { videoId }, orderBy: { id: 'asc' } }),
+    ]);
+
+    return { ...summary, decisions, openQuestions, actionItems };
   }
 
   /** Stub for now — real trigger (BullMQ enqueue) wired in Phase 3. */
@@ -27,7 +34,6 @@ export class SummariesService {
       data: {
         summaryText: dto.summaryText,
         keyPoints: dto.keyPoints as any,
-        actionItems: dto.actionItems as any,
       },
     });
   }

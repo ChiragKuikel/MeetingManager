@@ -9,6 +9,8 @@ export interface StructuredSummaryPayload {
     summary_text: string;
     key_points: string[];
     action_items: ActionItem[];
+    decisions: string[];
+    open_questions: string[];
     speakers: Speaker[];
 }
 
@@ -71,6 +73,8 @@ export class GroqService {
 - "summary_text": string, 2-4 sentences overview
 - "key_points": array of short strings (bullet-level facts)
 - "action_items": array of objects with keys task (string), assignee (string, use "Unassigned" if unknown), due (string, ISO date YYYY-MM-DD or "TBD"), priority (one of "high","medium","low")
+- "decisions": array of short strings, one per distinct decision made in the meeting (empty array if none)
+- "open_questions": array of short strings, one per unresolved question raised in the meeting (empty array if none)
 - "speakers": array of objects with keys name (string), speaking_time (string, approximate like "5:00" or "Unknown"), word_count (number estimate from transcript share), role (optional string)
 
 Do not include markdown fences or commentary. No speaker diarization is provided; infer speakers only when the transcript clearly attributes speech, otherwise use one entry like {"name":"Speaker 1","speaking_time":"Unknown","word_count":0} or split roughly by paragraph if multiple voices are obvious.`;
@@ -125,12 +129,16 @@ Do not include markdown fences or commentary. No speaker diarization is provided
             : [];
 
         const action_items = this.normalizeActionItems(parsed.action_items);
+        const decisions = this.normalizeStringArray(parsed.decisions);
+        const open_questions = this.normalizeStringArray(parsed.open_questions);
         const speakers = this.normalizeSpeakers(parsed.speakers);
 
         return {
             summary_text,
             key_points: key_points.length ? key_points : ['See transcript for details.'],
             action_items,
+            decisions,
+            open_questions,
             speakers
         };
     }
@@ -173,6 +181,13 @@ Do not include markdown fences or commentary. No speaker diarization is provided
                 return { task, assignee, due, priority };
             })
             .filter((x): x is ActionItem => x !== null);
+    }
+
+    private normalizeStringArray(value: unknown): string[] {
+        if (!Array.isArray(value)) return [];
+        return value
+            .filter((x: unknown): x is string => typeof x === 'string' && x.trim().length > 0)
+            .map((s: string) => s.trim());
     }
 
     private normalizeSpeakers(value: unknown): Speaker[] {
