@@ -6,6 +6,7 @@ import { ExpressAdapter } from '@bull-board/express';
 import { PrismaModule } from './prisma/prisma.module';
 import { VideosModule } from './videos/videos.module';
 import { SummariesModule } from './summaries/summaries.module';
+import { ActionItemsModule } from './action-items/action-items.module';
 import { ProcessingModule } from './processing/processing.module';
 import { HealthModule } from './health/health.module';
 import { AuthModule } from './auth/auth.module';
@@ -26,6 +27,7 @@ import { QueueModule, VIDEO_PROCESSING_QUEUE } from './queue/queue.module';
     AuthModule,
     VideosModule,
     SummariesModule,
+    ActionItemsModule,
     ProcessingModule,
     HealthModule,
   ],
