@@ -25,21 +25,33 @@ interface Speaker {
 }
 
 interface ActionItem {
+  id: number;
   task: string;
-  assignee: string;
-  due: string;
-  priority: 'high' | 'medium' | 'low';
+  assignee: string | null;
+  dueDate: string | null;
+  priority: string | null;
+  status: 'open' | 'done';
+}
+
+interface Decision {
+  id: number;
+  description: string;
+}
+
+interface OpenQuestion {
+  id: number;
+  question: string;
 }
 
 interface SummaryData {
-  id: number;
-  video_id: number;
-  summary_text: string;
-  key_points: string[];
-  action_items: ActionItem[];
-  speakers: Speaker[];
-  transcript: string;
-  created_at: string;
+  videoId: number;
+  summaryText: string | null;
+  keyPoints: string[] | null;
+  speakers: Speaker[] | null;
+  transcript: string | null;
+  decisions: Decision[];
+  openQuestions: OpenQuestion[];
+  actionItems: ActionItem[];
 }
 
 interface VideoData {
@@ -50,11 +62,6 @@ interface VideoData {
   duration: number | null;
   status: string;
   created_at: string;
-  summary_text?: string;
-  key_points?: string;
-  action_items?: string;
-  speakers?: string;
-  transcript?: string;
 }
 
 interface VideoSummaryProps {
@@ -76,34 +83,25 @@ const VideoSummary = ({ videoId }: VideoSummaryProps) => {
   const fetchVideoData = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:3001/api/videos/${videoId}`);
-      const data = await response.json();
+      setError(null);
 
-      if (!response.ok || !data.success || !data.data) {
-        setError(data.error || `Request failed (${response.status})`);
+      const videoRes = await fetch(`http://localhost:3001/api/videos/${videoId}`);
+      const videoJson = await videoRes.json();
+      if (!videoRes.ok || !videoJson.success || !videoJson.data) {
+        setError(videoJson.error || `Request failed (${videoRes.status})`);
         return;
       }
+      setVideo(videoJson.data);
 
-      setVideo(data.data);
-
-      try {
-        if (typeof data.data.key_points === 'string' && data.data.key_points) {
-          data.data.key_points = JSON.parse(data.data.key_points);
-        }
-        if (typeof data.data.action_items === 'string' && data.data.action_items) {
-          data.data.action_items = JSON.parse(data.data.action_items);
-        }
-        if (typeof data.data.speakers === 'string' && data.data.speakers) {
-          data.data.speakers = JSON.parse(data.data.speakers);
-        }
-      } catch {
-        setError('Summary data is corrupted (invalid JSON).');
+      const summaryRes = await fetch(`http://localhost:3001/api/summaries/video/${videoId}`);
+      const summaryJson = await summaryRes.json();
+      if (!summaryRes.ok || !summaryJson.success || !summaryJson.data) {
+        setError(summaryJson.error || `Request failed (${summaryRes.status})`);
         return;
       }
-
-      setSummary(data.data);
-    } catch (error) {
-      console.error('Error fetching video:', error);
+      setSummary(summaryJson.data);
+    } catch (err) {
+      console.error('Error fetching video:', err);
       setError('Failed to load video summary');
     } finally {
       setLoading(false);
@@ -124,15 +122,6 @@ const VideoSummary = ({ videoId }: VideoSummaryProps) => {
       hour: '2-digit',
       minute: '2-digit'
     });
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'text-red-600 bg-red-50';
-      case 'medium': return 'text-yellow-600 bg-yellow-50';
-      case 'low': return 'text-green-600 bg-green-50';
-      default: return 'text-gray-600 bg-gray-50';
-    }
   };
 
   if (loading) {
@@ -264,17 +253,17 @@ const VideoSummary = ({ videoId }: VideoSummaryProps) => {
               <h2 className="text-lg font-semibold mb-4" style={{ color: '#35b3c9' }}>
                 Meeting Summary
               </h2>
-              <p className="text-gray-700 leading-relaxed">{summary.summary_text}</p>
+              <p className="text-gray-700 leading-relaxed">{summary.summaryText}</p>
             </div>
 
             {/* Key Points */}
-            {summary.key_points && summary.key_points.length > 0 && (
+            {summary.keyPoints && summary.keyPoints.length > 0 && (
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                 <h2 className="text-lg font-semibold mb-4" style={{ color: '#b524c5' }}>
                   Key Points
                 </h2>
                 <ul className="space-y-3">
-                  {summary.key_points.map((point, index) => (
+                  {summary.keyPoints.map((point, index) => (
                     <li key={index} className="flex items-start gap-3">
                       <span className="w-6 h-6 rounded-full bg-[#35b3c9]/10 text-[#35b3c9] flex items-center justify-center text-sm font-medium flex-shrink-0 mt-0.5">
                         {index + 1}
@@ -312,6 +301,40 @@ const VideoSummary = ({ videoId }: VideoSummaryProps) => {
                 </div>
               </div>
             )}
+
+            {/* Decisions */}
+            {summary.decisions && summary.decisions.length > 0 && (
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                <h2 className="text-lg font-semibold mb-4" style={{ color: '#35b3c9' }}>
+                  Decisions
+                </h2>
+                <ul className="space-y-3">
+                  {summary.decisions.map((decision) => (
+                    <li key={decision.id} className="flex items-start gap-3">
+                      <HiOutlineCheckCircle className="w-5 h-5 text-[#35b3c9] flex-shrink-0 mt-0.5" />
+                      <span className="text-gray-700">{decision.description}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Open Questions */}
+            {summary.openQuestions && summary.openQuestions.length > 0 && (
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                <h2 className="text-lg font-semibold mb-4" style={{ color: '#b524c5' }}>
+                  Open Questions
+                </h2>
+                <ul className="space-y-3">
+                  {summary.openQuestions.map((q) => (
+                    <li key={q.id} className="flex items-start gap-3">
+                      <HiOutlineExclamationCircle className="w-5 h-5 text-[#b524c5] flex-shrink-0 mt-0.5" />
+                      <span className="text-gray-700">{q.question}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </>
         )}
 
@@ -336,25 +359,33 @@ const VideoSummary = ({ videoId }: VideoSummaryProps) => {
               Action Items
             </h2>
             
-            {summary.action_items && summary.action_items.length > 0 ? (
+            {summary.actionItems && summary.actionItems.length > 0 ? (
               <div className="space-y-4">
-                {summary.action_items.map((item, index) => (
-                  <div key={index} className="border border-gray-100 rounded-lg p-4 hover:shadow-md transition-shadow">
+                {summary.actionItems.map((item) => (
+                  <div key={item.id} className="border border-gray-100 rounded-lg p-4 hover:shadow-md transition-shadow">
                     <div className="flex items-start justify-between mb-2">
                       <h3 className="font-medium text-gray-800">{item.task}</h3>
-                      <span className={`text-xs px-2 py-1 rounded-full ${getPriorityColor(item.priority)}`}>
-                        {item.priority.toUpperCase()}
+                      <span
+                        className={`text-xs px-2 py-1 rounded-full ${
+                          item.status === 'done' ? 'text-green-600 bg-green-50' : 'text-yellow-600 bg-yellow-50'
+                        }`}
+                      >
+                        {item.status.toUpperCase()}
                       </span>
                     </div>
-                    <div className="flex gap-4 text-sm">
-                      <div className="flex items-center gap-1 text-gray-600">
-                        <HiOutlineUser className="w-4 h-4" />
-                        <span>{item.assignee}</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-gray-600">
-                        <HiOutlineCalendar className="w-4 h-4" />
-                        <span>Due: {new Date(item.due).toLocaleDateString()}</span>
-                      </div>
+                    <div className="flex flex-wrap gap-4 text-sm">
+                      {item.assignee && (
+                        <div className="flex items-center gap-1 text-gray-600">
+                          <HiOutlineUser className="w-4 h-4" />
+                          <span>{item.assignee}</span>
+                        </div>
+                      )}
+                      {item.dueDate && (
+                        <div className="flex items-center gap-1 text-gray-600">
+                          <HiOutlineCalendar className="w-4 h-4" />
+                          <span>Due: {new Date(item.dueDate).toLocaleDateString()}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
