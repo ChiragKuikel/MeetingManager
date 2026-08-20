@@ -4,7 +4,9 @@
 import React, { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDropzone } from 'react-dropzone';
-import { 
+import { apiFetch, getToken } from '@/lib/auth';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
+import {
   HiOutlineCloudArrowUp, 
   HiOutlineXMark, 
   HiOutlineDocument, 
@@ -33,6 +35,7 @@ interface StatusResponse {
 }
 
 const VideoUpload = () => {
+  useRequireAuth();
   const router = useRouter();
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
   const [uploads, setUploads] = useState<Array<{ 
@@ -107,6 +110,10 @@ const VideoUpload = () => {
       });
 
       xhr.open('POST', 'http://localhost:3001/api/videos/upload');
+      const token = getToken();
+      if (token) {
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      }
       xhr.send(formData);
 
       const response = await uploadPromise;
@@ -143,7 +150,7 @@ const VideoUpload = () => {
   const pollProcessingStatus = async (videoId: number, fileName: string) => {
     const checkStatus = async () => {
       try {
-        const response = await fetch(`http://localhost:3001/api/videos/${videoId}/status`);
+        const response = await apiFetch(`http://localhost:3001/api/videos/${videoId}/status`);
         const data: StatusResponse = await response.json();
 
         if (data.data.status === 'completed') {
