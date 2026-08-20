@@ -2,13 +2,27 @@
 
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { getToken, clearToken } from "@/lib/auth";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeLink, setActiveLink] = useState("/");
+  const router = useRouter();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    setIsLoggedIn(!!getToken());
+  }, []);
+
+  const handleLogout = () => {
+    clearToken();
+    setIsLoggedIn(false);
+    router.push('/login');
+  };
 
 
   const toggleMenu = () => setIsOpen(!isOpen);
@@ -166,6 +180,28 @@ export default function Navbar() {
                 </motion.div>
               );
             })}
+
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="relative"
+            >
+              {isLoggedIn ? (
+                <button
+                  onClick={handleLogout}
+                  className="text-text hover:text-primary transition-colors text-md px-3 py-2"
+                >
+                  Log out
+                </button>
+              ) : (
+                <Link
+                  href="/login"
+                  className="text-text hover:text-primary transition-colors text-md px-3 py-2"
+                >
+                  Log in
+                </Link>
+              )}
+            </motion.div>
           </div>
 
           {/* Mobile Menu Button */}
@@ -246,6 +282,28 @@ export default function Navbar() {
                     </motion.div>
                   );
                 })}
+
+                <motion.div>
+                  {isLoggedIn ? (
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setIsOpen(false);
+                      }}
+                      className="block w-full text-left px-4 py-3 text-lg text-text hover:bg-gray-100 hover:text-primary transition-all"
+                    >
+                      Log out
+                    </button>
+                  ) : (
+                    <Link
+                      href="/login"
+                      className="block px-4 py-3 text-lg text-text hover:bg-gray-100 hover:text-primary transition-all"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Log in
+                    </Link>
+                  )}
+                </motion.div>
               </div>
             </motion.div>
           )}
