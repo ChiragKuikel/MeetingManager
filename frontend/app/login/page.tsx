@@ -6,9 +6,9 @@ import { useRouter } from 'next/navigation';
 import { setToken } from '@/lib/auth';
 
 interface LoginResponse {
-  success: boolean;
+  success?: boolean;
   data?: { accessToken: string };
-  error?: string;
+  message?: string | string[];
 }
 
 export default function LoginPage() {
@@ -32,7 +32,8 @@ export default function LoginPage() {
       const data: LoginResponse = await response.json();
 
       if (!response.ok || !data.success || !data.data) {
-        setError(data.error || 'Invalid email or password');
+        const message = Array.isArray(data.message) ? data.message[0] : data.message;
+        setError(message || 'Invalid email or password');
         return;
       }
 
