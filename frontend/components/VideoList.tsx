@@ -3,8 +3,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  HiOutlineDocumentText, 
+import { apiFetch } from '@/lib/auth';
+import {
+  HiOutlineDocumentText,
   HiOutlineClock,
   HiOutlineCheckCircle,
   HiOutlineEye,
@@ -32,7 +33,7 @@ const VideosList = () => {
 
   const fetchVideos = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/videos');
+      const response = await apiFetch('http://localhost:3001/api/videos');
       const data = await response.json();
       if (data.success) {
         setVideos(data.data.videos);
@@ -48,7 +49,7 @@ const VideosList = () => {
     if (!confirm('Are you sure you want to delete this video?')) return;
     
     try {
-      const response = await fetch(`http://localhost:3001/api/videos/${id}`, {
+      const response = await apiFetch(`http://localhost:3001/api/videos/${id}`, {
         method: 'DELETE'
       });
       const data = await response.json();

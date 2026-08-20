@@ -3,9 +3,10 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  HiOutlineDocumentText, 
-  HiOutlineUserGroup, 
+import { apiFetch } from '@/lib/auth';
+import {
+  HiOutlineDocumentText,
+  HiOutlineUserGroup,
   HiOutlineCheckCircle,
   HiOutlineClock,
   HiOutlineCalendar,
@@ -85,7 +86,7 @@ const VideoSummary = ({ videoId }: VideoSummaryProps) => {
       setLoading(true);
       setError(null);
 
-      const videoRes = await fetch(`http://localhost:3001/api/videos/${videoId}`);
+      const videoRes = await apiFetch(`http://localhost:3001/api/videos/${videoId}`);
       const videoJson = await videoRes.json();
       if (!videoRes.ok || !videoJson.success || !videoJson.data) {
         setError(videoJson.error || `Request failed (${videoRes.status})`);
@@ -93,7 +94,7 @@ const VideoSummary = ({ videoId }: VideoSummaryProps) => {
       }
       setVideo(videoJson.data);
 
-      const summaryRes = await fetch(`http://localhost:3001/api/summaries/video/${videoId}`);
+      const summaryRes = await apiFetch(`http://localhost:3001/api/summaries/video/${videoId}`);
       const summaryJson = await summaryRes.json();
       if (!summaryRes.ok || !summaryJson.success || !summaryJson.data) {
         setError(summaryJson.error || `Request failed (${summaryRes.status})`);

@@ -3,6 +3,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiFetch } from '@/lib/auth';
 import {
   HiOutlineCheckCircle,
   HiOutlineExclamationCircle,
@@ -38,7 +39,7 @@ const TaskList = () => {
       setLoading(true);
       setError(null);
       const qs = tab === 'all' ? '' : `?status=${tab}`;
-      const response = await fetch(`http://localhost:3001/api/action-items${qs}`);
+      const response = await apiFetch(`http://localhost:3001/api/action-items${qs}`);
       const data = await response.json();
 
       if (!response.ok || !data.success) {
