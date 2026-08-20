@@ -64,7 +64,7 @@ export class OverdueNotificationsProcessor extends WorkerHost {
 
     if (!res.ok) {
       const body = await res.text().catch(() => '');
-      this.logger.error(`Slack webhook post failed: ${res.status} ${body}`);
+      throw new Error(`Slack webhook post failed: ${res.status} ${body}`);
     }
   }
 }
