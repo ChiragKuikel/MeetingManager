@@ -13,17 +13,20 @@ import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { bullBoardAuthMiddleware } from './auth/bull-board-auth.middleware';
 import { QueueModule, VIDEO_PROCESSING_QUEUE } from './queue/queue.module';
+import { NotificationsModule, OVERDUE_NOTIFICATIONS_QUEUE } from './notifications/notifications.module';
 
 @Module({
   imports: [
     PrismaModule,
     QueueModule,
+    NotificationsModule,
     BullBoardModule.forRoot({
       route: '/admin/queues',
       adapter: ExpressAdapter,
       middleware: bullBoardAuthMiddleware,
     }),
     BullBoardModule.forFeature({ name: VIDEO_PROCESSING_QUEUE, adapter: BullMQAdapter }),
+    BullBoardModule.forFeature({ name: OVERDUE_NOTIFICATIONS_QUEUE, adapter: BullMQAdapter }),
     AuthModule,
     VideosModule,
     SummariesModule,

@@ -27,6 +27,7 @@ interface Environment {
     GROQ_API_KEY: string;
     GROQ_TRANSCRIBE_MODEL: string;
     GROQ_CHAT_MODEL: string;
+    SLACK_WEBHOOK_URL: string;
 }
 
 export const env: Environment = {
@@ -48,5 +49,6 @@ export const env: Environment = {
     API_KEY: process.env.API_KEY || 'demo-key',
     GROQ_API_KEY: process.env.GROQ_API_KEY || '',
     GROQ_TRANSCRIBE_MODEL: process.env.GROQ_TRANSCRIBE_MODEL || 'whisper-large-v3-turbo',
-    GROQ_CHAT_MODEL: process.env.GROQ_CHAT_MODEL || 'llama-3.1-8b-instant'
+    GROQ_CHAT_MODEL: process.env.GROQ_CHAT_MODEL || 'llama-3.1-8b-instant',
+    SLACK_WEBHOOK_URL: process.env.SLACK_WEBHOOK_URL || ''
 };
