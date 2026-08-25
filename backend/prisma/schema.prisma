@@ -24,6 +24,12 @@ enum ActionItemStatus {
   done
 }
 
+enum SearchSourceType {
+  decision
+  action_item
+  open_question
+}
+
 model Organization {
   id        Int      @id @default(autoincrement())
   name      String   @db.VarChar(255)
@@ -35,6 +41,7 @@ model Organization {
   decisions     Decision[]
   openQuestions OpenQuestion[]
   actionItems   ActionItem[]
+  searchItems   SearchItem[]
 
   @@map("organizations")
 }
@@ -78,6 +85,7 @@ model Video {
   decisions     Decision[]
   openQuestions OpenQuestion[]
   actionItems   ActionItem[]
+  searchItems   SearchItem[]
 
   @@index([userId, status])
   @@index([organizationId])
@@ -150,4 +158,22 @@ model ActionItem {
   @@index([organizationId])
   @@index([ownerId])
   @@map("action_items")
+}
+
+model SearchItem {
+  id             Int              @id @default(autoincrement())
+  organizationId Int              @map("organization_id")
+  videoId        Int              @map("video_id")
+  sourceType     SearchSourceType @map("source_type")
+  sourceId       Int              @map("source_id")
+  text           String
+  embedding      Unsupported("vector(384)")
+  createdAt      DateTime         @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  video        Video        @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([videoId])
+  @@map("search_items")
 }
