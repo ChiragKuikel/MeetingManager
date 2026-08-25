@@ -57,6 +57,7 @@ export default function Navbar() {
     { name: "About", href: "/about" },
     { name: "Summarize", href: "/video" },
     { name: "Tasks", href: "/tasks" },
+    { name: "Search", href: "/search" },
     { name: "Contact", href: "/contact" },
   ];
 
@@ -132,7 +133,7 @@ export default function Navbar() {
 
             
             {/* Rest of the links (About, Vacancy, Blog, Contact) */}
-            {["About", "Summarize", "Tasks", "Contact"].map((name, index) => {
+            {["About", "Summarize", "Tasks", "Search", "Contact"].map((name, index) => {
               const link = navLinks.find(l => l.name === name);
               if (!link) return null;
 
@@ -253,7 +254,7 @@ export default function Navbar() {
 
                 
                 {/* Rest of links */}
-                {["About", "Summarize", "Tasks", "Contact"].map((name, index) => {
+                {["About", "Summarize", "Tasks", "Search", "Contact"].map((name, index) => {
                   const link = navLinks.find(l => l.name === name);
                   if (!link) return null;
 
