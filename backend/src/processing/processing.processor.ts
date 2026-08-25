@@ -1,16 +1,20 @@
 import { Logger } from '@nestjs/common';
-import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Job } from 'bullmq';
+import { InjectQueue, Processor, WorkerHost } from '@nestjs/bullmq';
+import { Job, Queue } from 'bullmq';
 import { PrismaService } from '../prisma/prisma.service';
 import audioExtractionService from '../services/audioExtractionService';
 import groqService from '../services/groqService';
 import { VIDEO_PROCESSING_QUEUE, VideoProcessingJob } from '../queue/queue.module';
+import { SEARCH_INDEXING_QUEUE, SearchIndexingJob } from '../search/search-indexing.module';
 
 @Processor(VIDEO_PROCESSING_QUEUE, { concurrency: 2 })
 export class ProcessingProcessor extends WorkerHost {
   private readonly logger = new Logger(ProcessingProcessor.name);
 
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    @InjectQueue(SEARCH_INDEXING_QUEUE) private readonly searchIndexingQueue: Queue<SearchIndexingJob>
+  ) {
     super();
   }
 
@@ -79,6 +83,8 @@ export class ProcessingProcessor extends WorkerHost {
           })),
         }),
       ]);
+
+      await this.searchIndexingQueue.add('index-search-items', { videoId });
 
       await this.prisma.video.update({
         where: { id: videoId },
