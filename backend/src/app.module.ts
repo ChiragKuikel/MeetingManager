@@ -14,12 +14,15 @@ import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { bullBoardAuthMiddleware } from './auth/bull-board-auth.middleware';
 import { QueueModule, VIDEO_PROCESSING_QUEUE } from './queue/queue.module';
 import { NotificationsModule, OVERDUE_NOTIFICATIONS_QUEUE } from './notifications/notifications.module';
+import { EmbeddingModule } from './embedding/embedding.module';
+import { SearchModule } from './search/search.module';
 
 @Module({
   imports: [
     PrismaModule,
     QueueModule,
     NotificationsModule,
+    EmbeddingModule,
     BullBoardModule.forRoot({
       route: '/admin/queues',
       adapter: ExpressAdapter,
@@ -31,6 +34,7 @@ import { NotificationsModule, OVERDUE_NOTIFICATIONS_QUEUE } from './notification
     VideosModule,
     SummariesModule,
     ActionItemsModule,
+    SearchModule,
     ProcessingModule,
     HealthModule,
   ],
